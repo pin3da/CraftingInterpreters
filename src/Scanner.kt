@@ -5,6 +5,7 @@ class Scanner(private val source: String, private val errorReporter: ErrorReport
   var start = 0
   var current = 0
   var line = 1
+
   companion object {
     val keywords = mapOf(
       "and" to AND,
@@ -26,7 +27,7 @@ class Scanner(private val source: String, private val errorReporter: ErrorReport
     )
   }
 
-  private fun isAtEnd() : Boolean {
+  private fun isAtEnd(): Boolean {
     return current >= source.length
   }
 
@@ -69,7 +70,7 @@ class Scanner(private val source: String, private val errorReporter: ErrorReport
       }
       '\n' -> line++
       '"' -> string()
-      else -> when  {
+      else -> when {
         isDigit(c) -> number()
         isAlpha(c) -> identifier()
         else -> errorReporter.error(line, "Unexpected character.")
@@ -102,17 +103,17 @@ class Scanner(private val source: String, private val errorReporter: ErrorReport
     // Look for a fractional part.
     if (peek() == '.' && isDigit(peek(1))) {
       // Consume the "."
-      advance();
+      advance()
 
       while (isDigit(peek())) {
-        advance();
+        advance()
       }
     }
 
     addToken(
       TokenType.NUMBER,
       source.substring(start, current).toDouble()
-    );
+    )
   }
 
   private fun isDigit(c: Char): Boolean {
@@ -140,7 +141,7 @@ class Scanner(private val source: String, private val errorReporter: ErrorReport
     addToken(STRING, value)
   }
 
-  private fun peek(delta :Int = 0): Char {
+  private fun peek(delta: Int = 0): Char {
     if (current + delta >= source.length) {
       return '\u0000'
     }
@@ -169,7 +170,7 @@ class Scanner(private val source: String, private val errorReporter: ErrorReport
 
   private fun advance(): Char {
     current++
-    return source[current-1]
+    return source[current - 1]
   }
 
 }

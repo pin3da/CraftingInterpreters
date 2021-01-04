@@ -5,6 +5,7 @@ import kotlin.system.exitProcess
 
 object Lox {
   private val errorReporter = ErrorReporter()
+
   @JvmStatic
   fun main(args: Array<String>) {
     when (args.size) {
@@ -38,14 +39,9 @@ object Lox {
   private fun runLox(source: String) {
     val scanner = Scanner(source, errorReporter)
     val tokens = scanner.scanTokens()
-
     for (t in tokens) {
       println(t)
     }
-
   }
-
-
-
 }
 
