@@ -1,9 +1,6 @@
-
-import Lox.error
 import TokenType.*
 
-
-class Scanner(private val source: String) {
+class Scanner(private val source: String, private val errorReporter: ErrorReporterInterface) {
   private val tokens = mutableListOf<Token>()
   var start = 0
   var current = 0
@@ -75,7 +72,7 @@ class Scanner(private val source: String) {
       else -> when  {
         isDigit(c) -> number()
         isAlpha(c) -> identifier()
-        else -> error(line, "Unexpected character.")
+        else -> errorReporter.error(line, "Unexpected character.")
       }
     }
   }
@@ -131,7 +128,7 @@ class Scanner(private val source: String) {
     }
 
     if (isAtEnd()) {
-      error(line, "Unterminated string.")
+      errorReporter.error(line, "Unterminated string.")
       return
     }
 

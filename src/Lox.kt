@@ -4,8 +4,7 @@ import java.io.InputStreamReader
 import kotlin.system.exitProcess
 
 object Lox {
-  var hadError: Boolean = false
-
+  private val errorReporter = ErrorReporter()
   @JvmStatic
   fun main(args: Array<String>) {
     when (args.size) {
@@ -21,7 +20,7 @@ object Lox {
 
   private fun runFile(path: String) {
     runLox(File(path).readText())
-    if (hadError) exitProcess(65)
+    if (errorReporter.hadError) exitProcess(65)
   }
 
   private fun runPrompt() {
@@ -32,12 +31,12 @@ object Lox {
       print("> ")
       val line = reader.readLine() ?: break
       runLox(line)
-      hadError = false
+      errorReporter.reset()
     }
   }
 
   private fun runLox(source: String) {
-    val scanner = Scanner(source)
+    val scanner = Scanner(source, errorReporter)
     val tokens = scanner.scanTokens()
 
     for (t in tokens) {
@@ -46,14 +45,7 @@ object Lox {
 
   }
 
-  fun error(line: Int, message: String) {
-    report(line, "", message)
-  }
 
-  private fun report(line: Int, where: String, message: String) {
-    println("[line $line] Error $where: $message")
-    hadError = true
-  }
 
 }
 
