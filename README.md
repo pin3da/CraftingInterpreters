@@ -1,2 +1,3 @@
 # CraftingInterpreters
-Kotlin implementation of craftinginterpreters.com
+
+Kotlin implementation of https://craftinginterpreters.com
