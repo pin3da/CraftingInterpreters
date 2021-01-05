@@ -1,0 +1,6 @@
+# http://editorconfig.org
+root = true
+
+[*.{kt,kts}]
+intent_style = space
+intent_size = 4
