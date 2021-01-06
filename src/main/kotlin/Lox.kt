@@ -5,6 +5,7 @@ import kotlin.system.exitProcess
 
 object Lox {
     private val errorReporter = ErrorReporter()
+    private val interpreter = Interpreter(errorReporter)
 
     @JvmStatic
     fun main(args: Array<String>) {
@@ -22,6 +23,7 @@ object Lox {
     private fun runFile(path: String) {
         runLox(File(path).readText())
         if (errorReporter.hadError) exitProcess(65)
+        if (errorReporter.hadRuntimeError) exitProcess(70)
     }
 
     private fun runPrompt() {
@@ -45,6 +47,8 @@ object Lox {
         if (errorReporter.hadError) {
             return
         }
+
         println(AstPrinter().print(expr!!))
+        println("Interpret = " + interpreter.interpret(expr!!))
     }
 }

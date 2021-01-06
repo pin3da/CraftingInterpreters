@@ -8,8 +8,6 @@ import TokenType.VAR
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-
-
 internal class ScannerTest {
     @Test
     fun basicLine() {

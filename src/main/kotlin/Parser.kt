@@ -6,7 +6,7 @@ class Parser(
 
     private var current = 0
 
-    fun parse() : Expr? {
+    fun parse(): Expr? {
         return try {
             expression()
         } catch (error: ParseError) {

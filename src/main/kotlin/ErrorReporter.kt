@@ -1,12 +1,15 @@
 interface ErrorReporterInterface {
     var hadError: Boolean
+    var hadRuntimeError: Boolean
 
     fun error(line: Int, message: String)
     fun error(token: Token, message: String)
+    fun error(error: RuntimeError)
 }
 
 class ErrorReporter : ErrorReporterInterface {
     override var hadError = false
+    override var hadRuntimeError = false
 
     override fun error(line: Int, message: String) {
         report(line, "", message)
@@ -18,6 +21,11 @@ class ErrorReporter : ErrorReporterInterface {
             else -> "at '${token.lexeme}'"
         }
         report(token.line, where, message)
+    }
+
+    override fun error(error: RuntimeError) {
+        println("${error.message}\n[line ${error.token.line}]")
+        hadRuntimeError = true
     }
 
     private fun report(line: Int, where: String, message: String) {
@@ -34,10 +42,12 @@ class TestErrorReporter : ErrorReporterInterface {
     sealed class Error {
         data class Lexer(val line: Int, val message: String) : Error()
         data class Parser(val token: Token, val message: String) : Error()
+        data class Interpreter(val error: RuntimeError) : Error()
     }
 
-
     override var hadError = false
+    override var hadRuntimeError = false
+
     val errors = mutableListOf<Error>()
 
     override fun error(line: Int, message: String) {
@@ -50,4 +60,8 @@ class TestErrorReporter : ErrorReporterInterface {
         hadError = true
     }
 
+    override fun error(error: RuntimeError) {
+        errors.add(Error.Interpreter(error))
+        hadRuntimeError = true
+    }
 }
