@@ -1,5 +1,7 @@
 # CraftingInterpreters
 
+![actions status](https://github.com/pin3da/CraftingInterpreters/workflows/kotlin%20CI/badge.svg)
+
 Kotlin implementation of https://craftinginterpreters.com
 
 
