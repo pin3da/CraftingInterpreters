@@ -6,6 +6,14 @@ class Parser(
 
     private var current = 0
 
+    fun parse() : Expr? {
+        return try {
+            expression()
+        } catch (error: ParseError) {
+            null
+        }
+    }
+
     private fun expression(): Expr {
         return equality()
     }
@@ -40,6 +48,23 @@ class Parser(
             current++
         }
         return previous()
+    }
+
+    private fun synchronize() {
+        advance()
+
+        while (!isAtEnd()) {
+            if (previous().type === TokenType.SEMICOLON) {
+                return
+            }
+            when (peek().type) {
+                TokenType.CLASS, TokenType.FUN, TokenType.VAR, TokenType.FOR, TokenType.IF,
+                TokenType.WHILE, TokenType.PRINT, TokenType.RETURN -> {
+                    return
+                }
+            }
+            advance()
+        }
     }
 
     private fun comparison(): Expr {
@@ -103,7 +128,7 @@ class Parser(
                 consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
                 Grouping(expr)
             }
-            else -> error("invalid state when parsing primary expression")
+            else -> throw error(peek(), "Expect expression.")
         }
     }
 

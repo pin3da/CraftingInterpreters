@@ -8,16 +8,7 @@ import TokenType.VAR
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-internal class TestErrorReporter : ErrorReporterInterface {
-    data class Error(val line: Int, val message: String)
 
-    override var hadError = false
-    val errors = mutableListOf<Error>()
-
-    override fun error(line: Int, message: String) {
-        errors.add(Error(line, message))
-    }
-}
 
 internal class ScannerTest {
     @Test
@@ -77,10 +68,10 @@ internal class ScannerTest {
         val scanner = Scanner(source, errorReporter)
         scanner.scanTokens()
         assertEquals(
-            errorReporter.errors,
             listOf(
-                TestErrorReporter.Error(1, "Unexpected character.")
-            )
+                TestErrorReporter.Error.Lexer(1, "Unexpected character.")
+            ),
+            errorReporter.errors
         )
     }
 }
