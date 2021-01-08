@@ -2,6 +2,29 @@
 
 Kotlin implementation of https://craftinginterpreters.com
 
+## Compiling, testing and runing
+
+The project can be loaded with IntellIJ and run from the IDE. But it also has maven configured so you can run it without any IDE with the following commands.
+
+### Compile
+
+```bash
+mvn package
+```
+
+### Test
+
+This includes unit tests and Ktlint test for style checking
+
+```bash
+mvn verify
+```
+
+### Run 
+
+```bash
+./lox [filename]
+```
 
 ## Notes
 

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+echo "Run 'mvn package' to compile"
+java -cp java -jar target/CraftingInterpreters-1.0-SNAPSHOT-jar-with-dependencies.jar $@
