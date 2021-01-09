@@ -113,7 +113,6 @@ internal class LoxTest {
         assertEquals(listOf("2"), out.printed)
     }
 
-
     @Test
     fun `undefined variables should fail`() {
         val source = """
@@ -164,10 +163,10 @@ internal class LoxTest {
                 "global a",
                 "global b",
                 "global c",
-            ), out.printed
+            ),
+            out.printed
         )
     }
-
 
     private fun interpret(source: String): Pair<TestErrorReporter, Printer> {
         val errorReporter = TestErrorReporter()

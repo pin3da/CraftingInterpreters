@@ -43,7 +43,6 @@ class Interpreter(
         }
     }
 
-
     private fun stringify(value: Any?): String {
         if (value == null) return "nil"
 

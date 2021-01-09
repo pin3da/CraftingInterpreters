@@ -1,4 +1,4 @@
-class Printer(private val printOut : Boolean) {
+class Printer(private val printOut: Boolean) {
     val printed = mutableListOf<String>()
 
     fun print(s: String) {
