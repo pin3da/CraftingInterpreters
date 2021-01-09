@@ -60,11 +60,11 @@ class Interpreter(
 
     private fun eval(expr: Expr): Any? {
         return when (expr) {
-            is Literal -> expr.value
-            is Grouping -> eval(expr.expr)
-            is Unary -> evalUnary(expr)
-            is Binary -> evalBinary(expr)
-            is Variable -> environment.get(expr.name)
+            is Expr.Literal -> expr.value
+            is Expr.Grouping -> eval(expr.expr)
+            is Expr.Unary -> evalUnary(expr)
+            is Expr.Binary -> evalBinary(expr)
+            is Expr.Variable -> environment.get(expr.name)
             is Expr.Assign -> {
                 val value = eval(expr.value)
                 environment.assign(expr.name, value)
@@ -73,7 +73,7 @@ class Interpreter(
         }
     }
 
-    private fun evalBinary(expr: Binary): Any? {
+    private fun evalBinary(expr: Expr.Binary): Any? {
         fun errorNumbers() {
             throw RuntimeError(expr.op, "Operands for '${expr.op.lexeme}' must be numbers.")
         }
@@ -126,7 +126,7 @@ class Interpreter(
         }
     }
 
-    private fun evalUnary(expr: Unary): Any? {
+    private fun evalUnary(expr: Expr.Unary): Any? {
         fun error(msg: String) {
             throw RuntimeError(expr.op, msg)
         }

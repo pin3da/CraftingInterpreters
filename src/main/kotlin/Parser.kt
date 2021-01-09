@@ -77,7 +77,7 @@ class Parser(
             val equals = previous()
             val value = assignment()
 
-            if (expr is Variable) {
+            if (expr is Expr.Variable) {
                 val name = expr.name
                 return Expr.Assign(name, value)
             }
@@ -93,7 +93,7 @@ class Parser(
         while (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
             val operator = previous()
             val right = comparison()
-            expr = Binary(expr, operator, right)
+            expr = Expr.Binary(expr, operator, right)
         }
         return expr
     }
@@ -148,7 +148,7 @@ class Parser(
         ) {
             val operator = previous()
             val right = term()
-            expr = Binary(expr, operator, right)
+            expr = Expr.Binary(expr, operator, right)
         }
         return expr
     }
@@ -159,7 +159,7 @@ class Parser(
         while (match(TokenType.MINUS, TokenType.PLUS)) {
             val operator = previous()
             val right = factor()
-            expr = Binary(expr, operator, right)
+            expr = Expr.Binary(expr, operator, right)
         }
         return expr
     }
@@ -170,7 +170,7 @@ class Parser(
         while (match(TokenType.SLASH, TokenType.STAR)) {
             val operator = previous()
             val right: Expr = unary()
-            expr = Binary(expr, operator, right)
+            expr = Expr.Binary(expr, operator, right)
         }
 
         return expr
@@ -180,7 +180,7 @@ class Parser(
         if (match(TokenType.BANG, TokenType.MINUS)) {
             val operator = previous()
             val right = unary()
-            return Unary(operator, right)
+            return Expr.Unary(operator, right)
         }
 
         return primary()
@@ -188,15 +188,15 @@ class Parser(
 
     private fun primary(): Expr {
         return when {
-            match(TokenType.FALSE) -> Literal(false)
-            match(TokenType.TRUE) -> Literal(true)
-            match(TokenType.NIL) -> Literal(null)
-            match(TokenType.NUMBER, TokenType.STRING) -> Literal(previous().literal)
-            match(TokenType.IDENTIFIER) -> Variable(previous())
+            match(TokenType.FALSE) -> Expr.Literal(false)
+            match(TokenType.TRUE) -> Expr.Literal(true)
+            match(TokenType.NIL) -> Expr.Literal(null)
+            match(TokenType.NUMBER, TokenType.STRING) -> Expr.Literal(previous().literal)
+            match(TokenType.IDENTIFIER) -> Expr.Variable(previous())
             match(TokenType.LEFT_PAREN) -> {
                 val expr = expression()
                 consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
-                Grouping(expr)
+                Expr.Grouping(expr)
             }
             else -> throw error(peek(), "Expect expression.")
         }

@@ -9,10 +9,11 @@ class AstPrinter {
 
     private fun traverse(expr: Expr) {
         when (expr) {
-            is Literal -> buffer.append(expr.value.toString())
-            is Binary -> parenthesize(expr.op.lexeme, expr.left, expr.right)
-            is Unary -> parenthesize(expr.op.lexeme, expr.expr)
-            is Grouping -> parenthesize("group", expr.expr)
+            is Expr.Literal -> buffer.append(expr.value.toString())
+            is Expr.Binary -> parenthesize(expr.op.lexeme, expr.left, expr.right)
+            is Expr.Unary -> parenthesize(expr.op.lexeme, expr.expr)
+            is Expr.Grouping -> parenthesize("group", expr.expr)
+            else -> error("no print implemented.")
         }
     }
 
