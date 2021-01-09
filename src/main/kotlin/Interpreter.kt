@@ -1,13 +1,48 @@
-class Interpreter(private val errorReporter: ErrorReporterInterface) {
+class Interpreter(
+    private val errorReporter: ErrorReporterInterface,
+    private val printer: Printer
+) {
+    private var environment = Environment()
 
-    fun interpret(expr: Expr): String {
-        return try {
-            stringify(eval(expr))
+    fun interpret(statements: List<Stmt>) {
+        try {
+            for (s in statements) {
+                execute(s)
+            }
         } catch (error: RuntimeError) {
             errorReporter.error(error)
-            "failed"
         }
     }
+
+    private fun execute(stmt: Stmt) {
+        when (stmt) {
+            is Stmt.Print -> {
+                val value = eval((stmt.value))
+                printer.print(stringify(value))
+            }
+            is Stmt.Expression -> eval(stmt.expr)
+            is Stmt.Var -> {
+                val value = stmt.initializer?.let {
+                    eval(it)
+                }
+                environment.define(stmt.name.lexeme, value)
+            }
+            is Stmt.Block -> executeBlock(stmt.statements)
+        }
+    }
+
+    private fun executeBlock(statements: List<Stmt>) {
+        val previous = environment
+        try {
+            this.environment = Environment(previous)
+            for (s in statements) {
+                execute(s)
+            }
+        } finally {
+            this.environment = previous
+        }
+    }
+
 
     private fun stringify(value: Any?): String {
         if (value == null) return "nil"
@@ -29,6 +64,12 @@ class Interpreter(private val errorReporter: ErrorReporterInterface) {
             is Grouping -> eval(expr.expr)
             is Unary -> evalUnary(expr)
             is Binary -> evalBinary(expr)
+            is Variable -> environment.get(expr.name)
+            is Expr.Assign -> {
+                val value = eval(expr.value)
+                environment.assign(expr.name, value)
+                value
+            }
         }
     }
 

@@ -5,7 +5,7 @@ import kotlin.system.exitProcess
 
 object Lox {
     private val errorReporter = ErrorReporter()
-    private val interpreter = Interpreter(errorReporter)
+    private val interpreter = Interpreter(errorReporter, Printer(true))
 
     @JvmStatic
     fun main(args: Array<String>) {
@@ -42,13 +42,12 @@ object Lox {
         val scanner = Scanner(source, errorReporter)
         val tokens = scanner.scanTokens()
         val parser = Parser(tokens.toCollection(ArrayDeque()), errorReporter)
-        val expr = parser.parse()
+        val statements = parser.parse()
 
         if (errorReporter.hadError) {
             return
         }
-
-        println(AstPrinter().print(expr!!))
-        println("Interpret = " + interpreter.interpret(expr!!))
+        println(statements)
+        interpreter.interpret(statements)
     }
 }
