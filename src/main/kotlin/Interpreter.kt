@@ -28,6 +28,15 @@ class Interpreter(
                 environment.define(stmt.name.lexeme, value)
             }
             is Stmt.Block -> executeBlock(stmt.statements)
+            is Stmt.If -> executeIf(stmt)
+        }
+    }
+
+    private fun executeIf(stmt: Stmt.If) {
+        if (isTruthy(stmt.contidtion)) {
+            execute(stmt.thenBranch)
+        } else {
+            stmt.elseBranch?.let { execute(it) }
         }
     }
 
@@ -69,7 +78,22 @@ class Interpreter(
                 environment.assign(expr.name, value)
                 value
             }
+            is Expr.Logical -> evalLogical(expr)
         }
+    }
+
+    private fun evalLogical(expr: Expr.Logical): Any? {
+        val left = eval(expr.left)
+        if (expr.operator.type == TokenType.OR) {
+            if (isTruthy(left)) {
+                return left
+            }
+        } else {
+            if (!isTruthy(left)) {
+                return left
+            }
+        }
+        return eval(expr.right)
     }
 
     private fun evalBinary(expr: Expr.Binary): Any? {

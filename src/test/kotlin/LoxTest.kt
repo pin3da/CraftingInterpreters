@@ -168,6 +168,16 @@ internal class LoxTest {
         )
     }
 
+    @Test
+    fun `eval logical operators`() {
+        val source = """
+            print nil or "manu";
+            print "manu" and "chao";
+        """.trimIndent()
+        val (_, out) = interpret(source)
+        assertEquals(listOf("manu", "chao"), out.printed)
+    }
+
     private fun interpret(source: String): Pair<TestErrorReporter, Printer> {
         val errorReporter = TestErrorReporter()
         val printer = Printer(false)
