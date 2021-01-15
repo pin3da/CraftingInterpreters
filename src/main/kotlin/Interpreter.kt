@@ -33,7 +33,7 @@ class Interpreter(
     }
 
     private fun executeIf(stmt: Stmt.If) {
-        if (isTruthy(stmt.contidtion)) {
+        if (isTruthy(stmt.condition)) {
             execute(stmt.thenBranch)
         } else {
             stmt.elseBranch?.let { execute(it) }
