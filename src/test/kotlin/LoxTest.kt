@@ -178,6 +178,25 @@ internal class LoxTest {
         assertEquals(listOf("manu", "chao"), out.printed)
     }
 
+    @Test
+    fun `eval loops`() {
+        val source = """
+          var a = 0;
+          var temp;
+
+          for (var b = 1; a < 100; b = temp + b) {
+            print a;
+            temp = a;
+            a = b;
+          }
+        """.trimIndent()
+        val (_, out) = interpret(source)
+        assertEquals(
+            listOf("0", "1", "1", "2", "3", "5", "8", "13", "21", "34", "55", "89"),
+            out.printed
+        )
+    }
+
     private fun interpret(source: String): Pair<TestErrorReporter, Printer> {
         val errorReporter = TestErrorReporter()
         val printer = Printer(false)

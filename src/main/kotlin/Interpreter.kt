@@ -29,6 +29,13 @@ class Interpreter(
             }
             is Stmt.Block -> executeBlock(stmt.statements)
             is Stmt.If -> executeIf(stmt)
+            is Stmt.While -> executeWhile(stmt)
+        }.let { } // Ensure it covers all the branches in the sealed class.
+    }
+
+    private fun executeWhile(stmt: Stmt.While) {
+        while (isTruthy(eval(stmt.condition))) {
+            execute(stmt.body)
         }
     }
 
