@@ -6,19 +6,22 @@ class Interpreter(
     private var environment = globals
 
     init {
-        globals.define("clock", object : LoxCallable {
-            override fun arity(): Int {
-                return 0
-            }
+        globals.define(
+            "clock",
+            object : LoxCallable {
+                override fun arity(): Int {
+                    return 0
+                }
 
-            override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
-                return System.currentTimeMillis().toDouble() / 1000.0
-            }
+                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
+                    return System.currentTimeMillis().toDouble() / 1000.0
+                }
 
-            override fun toString(): String {
-                return "<native fn>"
+                override fun toString(): String {
+                    return "<native fn>"
+                }
             }
-        })
+        )
     }
 
     fun interpret(statements: List<Stmt>) {
