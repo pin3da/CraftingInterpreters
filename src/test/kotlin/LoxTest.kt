@@ -197,6 +197,27 @@ internal class LoxTest {
         )
     }
 
+    @Test
+    fun `eval recursion and return`() {
+        val source = """
+            fun fib(n) {
+              if (n <= 1) {
+                return n;
+              }
+              return fib(n - 2) + fib(n - 1);
+            }
+
+            for (var i = 0; i < 12; i = i + 1) {
+              print fib(i);
+            }
+        """.trimIndent()
+        val (_, out) = interpret(source)
+        assertEquals(
+            listOf("0", "1", "1", "2", "3", "5", "8", "13", "21", "34", "55", "89"),
+            out.printed
+        )
+    }
+
     private fun interpret(source: String): Pair<TestErrorReporter, Printer> {
         val errorReporter = TestErrorReporter()
         val printer = Printer(false)

@@ -2,7 +2,24 @@ class Interpreter(
     private val errorReporter: ErrorReporterInterface,
     private val printer: Printer
 ) {
-    private var environment = Environment()
+    val globals = Environment()
+    private var environment = globals
+
+    init {
+        globals.define("clock", object : LoxCallable {
+            override fun arity(): Int {
+                return 0
+            }
+
+            override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
+                return System.currentTimeMillis().toDouble() / 1000.0
+            }
+
+            override fun toString(): String {
+                return "<native fn>"
+            }
+        })
+    }
 
     fun interpret(statements: List<Stmt>) {
         try {
@@ -21,16 +38,29 @@ class Interpreter(
                 printer.print(stringify(value))
             }
             is Stmt.Expression -> eval(stmt.expr)
-            is Stmt.Var -> {
-                val value = stmt.initializer?.let {
-                    eval(it)
-                }
-                environment.define(stmt.name.lexeme, value)
-            }
+            is Stmt.Var -> executeVar(stmt)
             is Stmt.Block -> executeBlock(stmt.statements)
             is Stmt.If -> executeIf(stmt)
             is Stmt.While -> executeWhile(stmt)
+            is Stmt.Function -> executeFunction(stmt)
+            is Stmt.Return -> executeReturn(stmt)
         }.let { } // Ensure it covers all the branches in the sealed class.
+    }
+
+    private fun executeReturn(stmt: Stmt.Return): Any? {
+        val value = stmt.value?.let { eval(it) }
+        throw Return(value)
+    }
+
+    private fun executeVar(stmt: Stmt.Var) {
+        val value = stmt.initializer?.let { eval(it) }
+        environment.define(stmt.name.lexeme, value)
+    }
+
+    private fun executeFunction(stmt: Stmt.Function): Any? {
+        val function = LoxFunction(stmt)
+        environment.define(stmt.name.lexeme, function)
+        return null
     }
 
     private fun executeWhile(stmt: Stmt.While) {
@@ -90,7 +120,24 @@ class Interpreter(
                 value
             }
             is Expr.Logical -> evalLogical(expr)
+            is Expr.Call -> evalCall(expr)
         }
+    }
+
+    private fun evalCall(expr: Expr.Call): Any? {
+        val callee = eval(expr.callee)
+        val arguments = expr.arguments.map { eval(it) }
+        if (callee !is LoxCallable) {
+            throw RuntimeError(expr.paren, "Can only call functions and classes.")
+        }
+        val function: LoxCallable = callee
+        if (arguments.size != function.arity()) {
+            throw RuntimeError(
+                expr.paren,
+                "Expected ${function.arity()} arguments but got ${arguments.size}."
+            )
+        }
+        return function.call(this, arguments)
     }
 
     private fun evalLogical(expr: Expr.Logical): Any? {

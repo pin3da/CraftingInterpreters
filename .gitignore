@@ -28,3 +28,5 @@ out/
 target/
 *~
 
+# Debug Lox program
+programs/scratch.lox
