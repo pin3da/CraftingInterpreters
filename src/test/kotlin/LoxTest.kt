@@ -218,6 +218,37 @@ internal class LoxTest {
         )
     }
 
+    @Test
+    fun `closures`() {
+        val source = """
+            fun makeCounter(name) {
+               var i = 0;
+               fun count() {
+                  i = i + 1;
+                  print "from " + name;
+                  print i;
+               }
+               return count;
+            }
+            var counter1 = makeCounter("First");
+            var counter2 = makeCounter("Second");
+            counter1();
+            counter2();
+            counter1();
+            counter2();
+        """.trimIndent()
+        val (_, out) = interpret(source)
+        assertEquals(
+            listOf(
+                "from First", "1",
+                "from Second", "1",
+                "from First", "2",
+                "from Second", "2"
+            ),
+            out.printed
+        )
+    }
+
     private fun interpret(source: String): Pair<TestErrorReporter, Printer> {
         val errorReporter = TestErrorReporter()
         val printer = Printer(false)
