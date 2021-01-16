@@ -40,23 +40,27 @@ class Interpreter(
     }
 
     private fun executeIf(stmt: Stmt.If) {
-        if (isTruthy(stmt.condition)) {
+        if (isTruthy(eval(stmt.condition))) {
             execute(stmt.thenBranch)
         } else {
             stmt.elseBranch?.let { execute(it) }
         }
     }
 
-    private fun executeBlock(statements: List<Stmt>) {
-        val previous = environment
+    fun executeInEnv(statements: List<Stmt>, outerEnvironment: Environment) {
+        val previous = this.environment
         try {
-            this.environment = Environment(previous)
+            this.environment = outerEnvironment
             for (s in statements) {
                 execute(s)
             }
         } finally {
             this.environment = previous
         }
+    }
+
+    private fun executeBlock(statements: List<Stmt>) {
+        executeInEnv(statements, Environment(environment))
     }
 
     private fun stringify(value: Any?): String {
@@ -178,6 +182,7 @@ class Interpreter(
         if (value == null) {
             return false
         }
+        check(value !is Stmt) { "Must eval Stmt before checking if it is Truthy." }
         if (value is Boolean) {
             return value
         }

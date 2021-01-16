@@ -17,7 +17,6 @@ object Lox {
                 exitProcess(64)
             }
         }
-        println("Args $args")
     }
 
     private fun runFile(path: String) {
@@ -47,7 +46,6 @@ object Lox {
         if (errorReporter.hadError) {
             return
         }
-        println(statements)
         interpreter.interpret(statements)
     }
 }
