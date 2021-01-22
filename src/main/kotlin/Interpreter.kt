@@ -2,8 +2,9 @@ class Interpreter(
     private val errorReporter: ErrorReporterInterface,
     private val printer: Printer
 ) {
-    val globals = Environment()
+    private val globals = Environment()
     private var environment = globals
+    private val locals = mutableMapOf<Expr, Int>()
 
     init {
         globals.define(
@@ -116,15 +117,27 @@ class Interpreter(
             is Expr.Grouping -> eval(expr.expr)
             is Expr.Unary -> evalUnary(expr)
             is Expr.Binary -> evalBinary(expr)
-            is Expr.Variable -> environment.get(expr.name)
-            is Expr.Assign -> {
-                val value = eval(expr.value)
-                environment.assign(expr.name, value)
-                value
-            }
+            is Expr.Variable -> lookUpVariable(expr.name, expr)
+            is Expr.Assign -> evalAssign(expr)
             is Expr.Logical -> evalLogical(expr)
             is Expr.Call -> evalCall(expr)
         }
+    }
+
+    private fun evalAssign(expr: Expr.Assign): Any? {
+        val value = eval(expr.value)
+        val dist = locals[expr]
+        if (dist != null) {
+            environment.assignAt(dist!!, expr.name, value)
+        } else {
+            globals.assign(expr.name, value)
+        }
+        return value
+    }
+
+    private fun lookUpVariable(name: Token, expr: Expr): Any? {
+        val dist = locals[expr] ?: return globals.get(name)
+        return environment.getAt(dist, name.lexeme)
     }
 
     private fun evalCall(expr: Expr.Call): Any? {
@@ -237,5 +250,9 @@ class Interpreter(
             return value
         }
         return true
+    }
+
+    fun resolve(expr: Expr, steps: Int) {
+        locals[expr] = steps
     }
 }

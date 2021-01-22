@@ -41,11 +41,18 @@ object Lox {
         val scanner = Scanner(source, errorReporter)
         val tokens = scanner.scanTokens()
         val parser = Parser(tokens.toCollection(ArrayDeque()), errorReporter)
-        val statements = parser.parse()
 
+        val statements = parser.parse()
         if (errorReporter.hadError) {
             return
         }
+
+        val resolver = Resolver(interpreter, errorReporter)
+        resolver.resolve(statements)
+        if (errorReporter.hadError) {
+            return
+        }
+
         interpreter.interpret(statements)
     }
 }

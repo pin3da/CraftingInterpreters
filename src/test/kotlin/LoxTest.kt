@@ -249,13 +249,68 @@ internal class LoxTest {
         )
     }
 
+    @Test
+    fun `should not read variable in its own initializer`() {
+        val source = """
+            var a = "outer";
+            {
+              var a = a;
+            }
+        """.trimIndent()
+        val (errorReporter, _) = interpret(source)
+        assertTrue(errorReporter.hadError)
+        assertEquals(1, errorReporter.errors.size)
+        assertEquals(
+            "Can't read local variable in its own initializer.",
+            (errorReporter.errors[0] as TestErrorReporter.Error.Parser).message
+        )
+    }
+
+    @Test
+    fun `should not redeclare variable in the same scope`() {
+        val source = """
+            fun bad() {
+              var a = "first";
+              var a = "second";
+            }
+        """.trimIndent()
+        val (errorReporter, _) = interpret(source)
+        assertTrue(errorReporter.hadError)
+        assertEquals(1, errorReporter.errors.size)
+        assertEquals(
+            "Variable already declared in this scope.",
+            (errorReporter.errors[0] as TestErrorReporter.Error.Parser).message
+        )
+    }
+
+    @Test
+    fun `should not return at top-level scope`() {
+        val source = """
+            return "at top level";
+        """.trimIndent()
+        val (errorReporter, _) = interpret(source)
+        assertTrue(errorReporter.hadError)
+        assertEquals(1, errorReporter.errors.size)
+        assertEquals(
+            "Can not return from top-level code.",
+            (errorReporter.errors[0] as TestErrorReporter.Error.Parser).message
+        )
+    }
+
     private fun interpret(source: String): Pair<TestErrorReporter, Printer> {
         val errorReporter = TestErrorReporter()
         val printer = Printer(false)
         val scanner = Scanner(source, errorReporter)
         val tokens = scanner.scanTokens().toCollection(ArrayDeque())
         val parser = Parser(tokens, errorReporter)
-        Interpreter(errorReporter, printer).interpret(parser.parse())
+        val interpreter = Interpreter(errorReporter, printer)
+        val statements = parser.parse()
+        val resolver = Resolver(interpreter, errorReporter)
+        resolver.resolve(statements)
+        if (errorReporter.hadError) {
+            return Pair(errorReporter, printer)
+        }
+        interpreter.interpret(statements)
         return Pair(errorReporter, printer)
     }
 }
