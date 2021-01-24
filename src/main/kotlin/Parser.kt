@@ -1,3 +1,5 @@
+
+
 class Parser(
     private val tokens: ArrayDeque<Token>,
     private val errorReporter: ErrorReporterInterface
@@ -17,6 +19,7 @@ class Parser(
     private fun declaration(): Stmt? {
         return try {
             when {
+                match(TokenType.CLASS) -> classDeclaration()
                 match(TokenType.FUN) -> function("function")
                 match(TokenType.VAR) -> varDeclaration()
                 else -> statement()
@@ -25,6 +28,19 @@ class Parser(
             synchronize()
             null
         }
+    }
+
+    private fun classDeclaration(): Stmt.Class {
+        val name = consume(TokenType.IDENTIFIER, "Expect class name.")
+        consume(TokenType.LEFT_BRACE, "Expect '{' before class body")
+
+        val methods = mutableListOf<Stmt.Function>()
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            methods.add(function("method"))
+        }
+        consume(TokenType.RIGHT_BRACE, "Expect '}' after class body")
+
+        return Stmt.Class(name, methods)
     }
 
     private fun function(kind: String): Stmt.Function {
@@ -139,10 +155,15 @@ class Parser(
         if (match(TokenType.EQUAL)) {
             val equals = previous()
             val value = assignment()
-
-            if (expr is Expr.Variable) {
-                val name = expr.name
-                return Expr.Assign(name, value)
+            when (expr) {
+                is Expr.Variable -> {
+                    val name = expr.name
+                    return Expr.Assign(name, value)
+                }
+                is Expr.Get -> {
+                    return Expr.Set(expr.obj, expr.name, value)
+                }
+                else -> error(equals, "Invalid assigment target.")
             }
             error(equals, "Invalid assigment target.")
         }
@@ -272,8 +293,11 @@ class Parser(
     private fun call(): Expr {
         var expr = primary()
         while (true) {
-            if (match(TokenType.LEFT_PAREN)) {
-                expr = finishCall(expr)
+            expr = if (match(TokenType.LEFT_PAREN)) {
+                finishCall(expr)
+            } else if (match(TokenType.DOT)) {
+                val name = consume(TokenType.IDENTIFIER, "Expect property name after '.'.")
+                Expr.Get(expr, name)
             } else {
                 break
             }

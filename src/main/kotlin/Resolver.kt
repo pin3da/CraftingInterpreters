@@ -17,6 +17,7 @@ class Resolver(
     private fun resolve(stmt: Stmt) {
         when (stmt) {
             is Stmt.Block -> resolve(stmt)
+            is Stmt.Class -> resolve(stmt)
             is Stmt.Function -> resolve(stmt)
             is Stmt.Expression -> resolve(stmt.expr)
             is Stmt.Print -> resolve(stmt.value)
@@ -25,6 +26,11 @@ class Resolver(
             is Stmt.Var -> resolve(stmt)
             is Stmt.If -> resolve(stmt)
         }.let { } // Catch missing branches.
+    }
+
+    private fun resolve(stmt: Stmt.Class) {
+        declare(stmt.name)
+        define(stmt.name)
     }
 
     private fun resolve(stmt: Stmt.Return) {
@@ -40,9 +46,12 @@ class Resolver(
             is Expr.Assign -> resolve(expr)
             is Expr.Binary -> resolve(expr)
             is Expr.Call -> resolve(expr)
+            is Expr.Get -> resolve(expr)
             is Expr.Grouping -> resolve(expr.expr)
-            is Expr.Literal -> { } // not binded to anything.
+            is Expr.Literal -> {
+            } // not binded to anything.
             is Expr.Logical -> resolve(expr)
+            is Expr.Set -> resolve(expr)
             is Expr.Unary -> resolve(expr.expr)
         }.let { }
     }
@@ -130,6 +139,15 @@ class Resolver(
                 return
             }
         }
+    }
+
+    private fun resolve(expr: Expr.Get) {
+        resolve(expr.obj)
+    }
+
+    private fun resolve(expr: Expr.Set) {
+        resolve(expr.value)
+        resolve(expr.obj)
     }
 
     private fun define(name: Token) {

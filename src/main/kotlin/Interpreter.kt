@@ -48,7 +48,49 @@ class Interpreter(
             is Stmt.While -> executeWhile(stmt)
             is Stmt.Function -> executeFunction(stmt)
             is Stmt.Return -> executeReturn(stmt)
+            is Stmt.Class -> executeClass(stmt)
         }.let { } // Ensure it covers all the branches in the sealed class.
+    }
+
+    private fun eval(expr: Expr): Any? {
+        return when (expr) {
+            is Expr.Literal -> expr.value
+            is Expr.Grouping -> eval(expr.expr)
+            is Expr.Unary -> evalUnary(expr)
+            is Expr.Binary -> evalBinary(expr)
+            is Expr.Variable -> lookUpVariable(expr.name, expr)
+            is Expr.Assign -> evalAssign(expr)
+            is Expr.Logical -> evalLogical(expr)
+            is Expr.Call -> evalCall(expr)
+            is Expr.Get -> evalGet(expr)
+            is Expr.Set -> evalSet(expr)
+        }
+    }
+
+    private fun evalSet(expr: Expr.Set): Any? {
+        val obj = eval(expr.obj)
+
+        if (obj !is LoxInstance) {
+            throw RuntimeError(expr.name, "Only instances have fields.")
+        }
+
+        val value = eval(expr.value)
+        obj.set(expr.name, value)
+        return value
+    }
+
+    private fun evalGet(expr: Expr.Get): Any? {
+        val obj = eval(expr.obj)
+        if (obj is LoxInstance) {
+            return obj.get(expr.name)
+        }
+        throw RuntimeError(expr.name, "Only instances have properties.")
+    }
+
+    private fun executeClass(stmt: Stmt.Class) {
+        environment.define(stmt.name.lexeme, null)
+        val klass = LoxClass(stmt.name.lexeme)
+        environment.assign(stmt.name, klass)
     }
 
     private fun executeReturn(stmt: Stmt.Return): Any? {
@@ -109,19 +151,6 @@ class Interpreter(
         }
 
         return value.toString()
-    }
-
-    private fun eval(expr: Expr): Any? {
-        return when (expr) {
-            is Expr.Literal -> expr.value
-            is Expr.Grouping -> eval(expr.expr)
-            is Expr.Unary -> evalUnary(expr)
-            is Expr.Binary -> evalBinary(expr)
-            is Expr.Variable -> lookUpVariable(expr.name, expr)
-            is Expr.Assign -> evalAssign(expr)
-            is Expr.Logical -> evalLogical(expr)
-            is Expr.Call -> evalCall(expr)
-        }
     }
 
     private fun evalAssign(expr: Expr.Assign): Any? {
