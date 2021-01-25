@@ -9,6 +9,11 @@ class LoxInstance(private val loxClass: LoxClass) {
         if (fields.containsKey(name.lexeme)) {
             return fields[name.lexeme]
         }
+
+        loxClass.findMethod(name.lexeme)?.let {
+            return it.bind(this)
+        }
+
         throw RuntimeError(name, "Undefined property '$name'.")
     }
 

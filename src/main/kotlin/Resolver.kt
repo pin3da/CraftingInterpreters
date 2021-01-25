@@ -4,8 +4,20 @@ class Resolver(
     private val interpreter: Interpreter,
     private val errorReporter: ErrorReporterInterface,
 ) {
+    enum class FunctionType {
+        NONE,
+        FUNCTION,
+        METHOD
+    }
+
+    enum class ClassType {
+        NONE,
+        CLASS
+    }
+
     private val scopes = Stack<MutableMap<String, Boolean>>()
     private var currentFunctionType = FunctionType.NONE
+    private var currentClassType = ClassType.NONE
 
     fun resolve(statements: List<Stmt>) {
         for (statement in statements) {
@@ -28,18 +40,6 @@ class Resolver(
         }.let { } // Catch missing branches.
     }
 
-    private fun resolve(stmt: Stmt.Class) {
-        declare(stmt.name)
-        define(stmt.name)
-    }
-
-    private fun resolve(stmt: Stmt.Return) {
-        if (currentFunctionType == FunctionType.NONE) {
-            errorReporter.error(stmt.keyword, "Can not return from top-level code.")
-        }
-        stmt.value?.let { resolve(it) }
-    }
-
     private fun resolve(expr: Expr) {
         when (expr) {
             is Expr.Variable -> resolve(expr)
@@ -53,7 +53,33 @@ class Resolver(
             is Expr.Logical -> resolve(expr)
             is Expr.Set -> resolve(expr)
             is Expr.Unary -> resolve(expr.expr)
+            is Expr.This -> resolve(expr)
         }.let { }
+    }
+
+    private fun resolve(stmt: Stmt.Class) {
+        val enclosingClassType = currentClassType
+        currentClassType = ClassType.CLASS
+        declare(stmt.name)
+
+        beginScope()
+        scopes.peek()["this"] = true
+
+        for (method in stmt.methods) {
+            val declaration = FunctionType.METHOD
+            resolveFunction(method, declaration)
+        }
+
+        endScope()
+        define(stmt.name)
+        currentClassType = enclosingClassType
+    }
+
+    private fun resolve(stmt: Stmt.Return) {
+        if (currentFunctionType == FunctionType.NONE) {
+            errorReporter.error(stmt.keyword, "Can not return from top-level code.")
+        }
+        stmt.value?.let { resolve(it) }
     }
 
     private fun resolve(stmt: Stmt.Function) {
@@ -150,6 +176,14 @@ class Resolver(
         resolve(expr.obj)
     }
 
+    private fun resolve(expr: Expr.This) {
+        if (currentClassType == ClassType.NONE) {
+            errorReporter.error(expr.keyword, "Can't use 'this' outside of a class")
+            return
+        }
+        resolveLocal(expr, expr.keyword)
+    }
+
     private fun define(name: Token) {
         if (scopes.isEmpty()) {
             return
@@ -179,9 +213,4 @@ class Resolver(
     private fun beginScope() {
         scopes.push(mutableMapOf())
     }
-}
-
-enum class FunctionType {
-    NONE,
-    FUNCTION
 }

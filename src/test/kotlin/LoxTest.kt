@@ -219,7 +219,7 @@ internal class LoxTest {
     }
 
     @Test
-    fun `closures`() {
+    fun `supports closures`() {
         val source = """
             fun makeCounter(name) {
                var i = 0;
@@ -293,6 +293,49 @@ internal class LoxTest {
         assertEquals(1, errorReporter.errors.size)
         assertEquals(
             "Can not return from top-level code.",
+            (errorReporter.errors[0] as TestErrorReporter.Error.Parser).message
+        )
+    }
+
+    @Test
+    fun `supports classes and 'this'`() {
+        val source = """
+            class Thing {
+              getCallback() {
+                fun localFunction() {
+                  print this;
+                  print "from local function";
+                }
+            
+                return localFunction;
+              }
+            }
+            
+            var callback = Thing().getCallback();
+            callback();
+        """.trimIndent()
+        val (_, out) = interpret(source)
+        assertEquals(
+            listOf(
+                "Thing instance",
+                "from local function"
+            ),
+            out.printed
+        )
+    }
+
+    @Test
+    fun `should fail to resolve 'this' outside methods`() {
+        val source = """
+        fun notAMethod() {
+          print this;
+        }
+        """.trimIndent()
+        val (errorReporter, _) = interpret(source)
+        assertTrue(errorReporter.hadError)
+        assertEquals(1, errorReporter.errors.size)
+        assertEquals(
+            "Can't use 'this' outside of a class",
             (errorReporter.errors[0] as TestErrorReporter.Error.Parser).message
         )
     }

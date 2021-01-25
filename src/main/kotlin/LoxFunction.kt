@@ -21,4 +21,10 @@ class LoxFunction(private val declaration: Stmt.Function, private val closure: E
         val params = declaration.params.map { it.lexeme }
         return "<fn ${declaration.name.lexeme} ($params)>"
     }
+
+    fun bind(loxInstance: LoxInstance): LoxFunction {
+        val environment = Environment(closure)
+        environment.define("this", loxInstance)
+        return LoxFunction(declaration, environment)
+    }
 }

@@ -1,5 +1,5 @@
-class LoxClass(val name: String) : LoxCallable {
-    override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
+class LoxClass(val name: String, val methods: Map<String, LoxFunction>) : LoxCallable {
+    override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
         return LoxInstance(this)
     }
 
@@ -9,5 +9,12 @@ class LoxClass(val name: String) : LoxCallable {
 
     override fun toString(): String {
         return name
+    }
+
+    fun findMethod(name: String): LoxFunction? {
+        if (methods.containsKey(name)) {
+            return methods[name]
+        }
+        return null
     }
 }

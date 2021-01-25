@@ -129,8 +129,8 @@ class Parser(
         val condition = expression()
         consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.")
 
-        var thenBranch = statement()
-        var elseBranch = if (match(TokenType.ELSE)) statement() else null
+        val thenBranch = statement()
+        val elseBranch = if (match(TokenType.ELSE)) statement() else null
         return Stmt.If(condition, thenBranch, elseBranch)
     }
 
@@ -151,7 +151,7 @@ class Parser(
     }
 
     private fun assignment(): Expr {
-        var expr = or()
+        val expr = or()
         if (match(TokenType.EQUAL)) {
             val equals = previous()
             val value = assignment()
@@ -331,6 +331,7 @@ class Parser(
                 consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
                 Expr.Grouping(expr)
             }
+            match(TokenType.THIS) -> Expr.This(previous())
             else -> throw error(peek(), "Expect expression.")
         }
     }

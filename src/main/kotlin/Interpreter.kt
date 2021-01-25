@@ -64,6 +64,7 @@ class Interpreter(
             is Expr.Call -> evalCall(expr)
             is Expr.Get -> evalGet(expr)
             is Expr.Set -> evalSet(expr)
+            is Expr.This -> lookUpVariable(expr.keyword, expr)
         }
     }
 
@@ -89,7 +90,12 @@ class Interpreter(
 
     private fun executeClass(stmt: Stmt.Class) {
         environment.define(stmt.name.lexeme, null)
-        val klass = LoxClass(stmt.name.lexeme)
+        val methods = mutableMapOf<String, LoxFunction>()
+        for (method in stmt.methods) {
+            val function = LoxFunction(method, environment)
+            methods[method.name.lexeme] = function
+        }
+        val klass = LoxClass(stmt.name.lexeme, methods)
         environment.assign(stmt.name, klass)
     }
 
