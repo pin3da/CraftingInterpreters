@@ -1,4 +1,8 @@
-class LoxFunction(private val declaration: Stmt.Function, private val closure: Environment) :
+class LoxFunction(
+    private val declaration: Stmt.Function,
+    private val closure: Environment,
+    private val isInitializer: Boolean
+) :
     LoxCallable {
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
         val environment = Environment(closure)
@@ -8,7 +12,13 @@ class LoxFunction(private val declaration: Stmt.Function, private val closure: E
         try {
             interpreter.executeInEnv(declaration.body, environment)
         } catch (returnValue: Return) {
+            if (isInitializer) {
+                return closure.getAt(0, "this")
+            }
             return returnValue.value
+        }
+        if (isInitializer) {
+            return closure.getAt(0, "this")
         }
         return null
     }
@@ -25,6 +35,6 @@ class LoxFunction(private val declaration: Stmt.Function, private val closure: E
     fun bind(loxInstance: LoxInstance): LoxFunction {
         val environment = Environment(closure)
         environment.define("this", loxInstance)
-        return LoxFunction(declaration, environment)
+        return LoxFunction(declaration, environment, isInitializer)
     }
 }

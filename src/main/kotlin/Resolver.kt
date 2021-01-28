@@ -7,6 +7,7 @@ class Resolver(
     enum class FunctionType {
         NONE,
         FUNCTION,
+        INITIALIZER,
         METHOD
     }
 
@@ -66,7 +67,8 @@ class Resolver(
         scopes.peek()["this"] = true
 
         for (method in stmt.methods) {
-            val declaration = FunctionType.METHOD
+            val declaration =
+                if (method.name.lexeme == "init") FunctionType.INITIALIZER else FunctionType.METHOD
             resolveFunction(method, declaration)
         }
 
@@ -79,7 +81,15 @@ class Resolver(
         if (currentFunctionType == FunctionType.NONE) {
             errorReporter.error(stmt.keyword, "Can not return from top-level code.")
         }
-        stmt.value?.let { resolve(it) }
+        stmt.value?.let {
+            if (currentFunctionType == FunctionType.INITIALIZER) {
+                errorReporter.error(
+                    stmt.keyword,
+                    "Can't return a value from an initializer"
+                )
+            }
+            resolve(it)
+        }
     }
 
     private fun resolve(stmt: Stmt.Function) {

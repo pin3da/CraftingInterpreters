@@ -340,6 +340,47 @@ internal class LoxTest {
         )
     }
 
+    @Test
+    fun `init with members`() {
+        val source = """
+         class Foo {
+          init(bar) {
+            this.bar = bar;
+          }
+        }
+        
+        var foo = Foo("member");
+        print foo.bar;
+        """.trimIndent()
+        val (_, out) = interpret(source)
+        assertEquals(
+            listOf(
+                "member"
+            ),
+            out.printed
+        )
+    }
+
+    @Test
+    fun `should fail to return something from initializer`() {
+        val source = """
+        class Foo {
+          init(bar) {
+            return bar;
+          }
+        }
+        
+        var foo = Foo("member");
+        """.trimIndent()
+        val (errorReporter, _) = interpret(source)
+        assertTrue(errorReporter.hadError)
+        assertEquals(1, errorReporter.errors.size)
+        assertEquals(
+            "Can't return a value from an initializer",
+            (errorReporter.errors[0] as TestErrorReporter.Error.Parser).message
+        )
+    }
+
     private fun interpret(source: String): Pair<TestErrorReporter, Printer> {
         val errorReporter = TestErrorReporter()
         val printer = Printer(false)

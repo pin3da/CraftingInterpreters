@@ -1,10 +1,14 @@
 class LoxClass(val name: String, val methods: Map<String, LoxFunction>) : LoxCallable {
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
-        return LoxInstance(this)
+        val instance = LoxInstance(this)
+        val initializer = findMethod("init")
+        initializer?.bind(instance)?.call(interpreter, arguments)
+        return instance
     }
 
     override fun arity(): Int {
-        return 0
+        val initializer = findMethod("init")
+        return initializer?.arity() ?: 0
     }
 
     override fun toString(): String {

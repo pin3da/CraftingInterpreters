@@ -92,7 +92,7 @@ class Interpreter(
         environment.define(stmt.name.lexeme, null)
         val methods = mutableMapOf<String, LoxFunction>()
         for (method in stmt.methods) {
-            val function = LoxFunction(method, environment)
+            val function = LoxFunction(method, environment, method.name.lexeme == "init")
             methods[method.name.lexeme] = function
         }
         val klass = LoxClass(stmt.name.lexeme, methods)
@@ -110,7 +110,7 @@ class Interpreter(
     }
 
     private fun executeFunction(stmt: Stmt.Function): Any? {
-        val function = LoxFunction(stmt, environment)
+        val function = LoxFunction(stmt, environment, false)
         environment.define(stmt.name.lexeme, function)
         return null
     }
@@ -163,7 +163,7 @@ class Interpreter(
         val value = eval(expr.value)
         val dist = locals[expr]
         if (dist != null) {
-            environment.assignAt(dist!!, expr.name, value)
+            environment.assignAt(dist, expr.name, value)
         } else {
             globals.assign(expr.name, value)
         }
