@@ -1,4 +1,4 @@
-class LoxClass(val name: String, val methods: Map<String, LoxFunction>) : LoxCallable {
+class LoxClass(val name: String, val superclass: LoxClass?, val methods: Map<String, LoxFunction>) : LoxCallable {
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
         val instance = LoxInstance(this)
         val initializer = findMethod("init")
@@ -18,6 +18,9 @@ class LoxClass(val name: String, val methods: Map<String, LoxFunction>) : LoxCal
     fun findMethod(name: String): LoxFunction? {
         if (methods.containsKey(name)) {
             return methods[name]
+        }
+        superclass?.let {
+            return it.findMethod(name)
         }
         return null
     }

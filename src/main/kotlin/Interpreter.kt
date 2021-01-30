@@ -64,8 +64,18 @@ class Interpreter(
             is Expr.Call -> evalCall(expr)
             is Expr.Get -> evalGet(expr)
             is Expr.Set -> evalSet(expr)
+            is Expr.Super -> evalSuper(expr)
             is Expr.This -> lookUpVariable(expr.keyword, expr)
         }
+    }
+
+    private fun evalSuper(expr: Expr.Super): Any? {
+        val distance = locals[expr]!!
+        val superclass = environment.getAt(distance, "super") as LoxClass
+        val obj = environment.getAt(distance - 1, "this") as LoxInstance
+        val method = superclass.findMethod(expr.method.lexeme)
+            ?: throw RuntimeError(expr.method, "Undefined property '${expr.method.lexeme}'.")
+        return method.bind(obj)
     }
 
     private fun evalSet(expr: Expr.Set): Any? {
@@ -89,13 +99,32 @@ class Interpreter(
     }
 
     private fun executeClass(stmt: Stmt.Class) {
+        val superclass = stmt.superClass?.let {
+            val superClass = eval(it)
+            if (superClass !is LoxClass) {
+                throw RuntimeError(it.name, "Superclass must be a class.")
+            }
+            superClass
+        }
+
         environment.define(stmt.name.lexeme, null)
+
+        stmt.superClass?.let {
+            environment = Environment(environment)
+            environment.define("super", superclass)
+        }
+
         val methods = mutableMapOf<String, LoxFunction>()
         for (method in stmt.methods) {
             val function = LoxFunction(method, environment, method.name.lexeme == "init")
             methods[method.name.lexeme] = function
         }
-        val klass = LoxClass(stmt.name.lexeme, methods)
+        val klass = LoxClass(stmt.name.lexeme, superclass, methods)
+
+        stmt.superClass?.let {
+            environment = environment.enclosing!!
+        }
+
         environment.assign(stmt.name, klass)
     }
 

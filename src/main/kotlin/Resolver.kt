@@ -13,7 +13,8 @@ class Resolver(
 
     enum class ClassType {
         NONE,
-        CLASS
+        CLASS,
+        SUBCLASS
     }
 
     private val scopes = Stack<MutableMap<String, Boolean>>()
@@ -53,6 +54,7 @@ class Resolver(
             } // not binded to anything.
             is Expr.Logical -> resolve(expr)
             is Expr.Set -> resolve(expr)
+            is Expr.Super -> resolve(expr)
             is Expr.Unary -> resolve(expr.expr)
             is Expr.This -> resolve(expr)
         }.let { }
@@ -62,6 +64,21 @@ class Resolver(
         val enclosingClassType = currentClassType
         currentClassType = ClassType.CLASS
         declare(stmt.name)
+        define(stmt.name)
+
+        if (stmt.superClass != null && stmt.name.lexeme == stmt.superClass.name.lexeme) {
+            errorReporter.error(stmt.superClass.name, "A class can't inherit from itself.")
+        }
+
+        stmt.superClass?.let {
+            currentClassType = ClassType.SUBCLASS
+            resolve(it)
+        }
+
+        stmt.superClass?.let {
+            beginScope()
+            scopes.peek()["super"] = true
+        }
 
         beginScope()
         scopes.peek()["this"] = true
@@ -73,7 +90,8 @@ class Resolver(
         }
 
         endScope()
-        define(stmt.name)
+        stmt.superClass?.let { endScope() }
+
         currentClassType = enclosingClassType
     }
 
@@ -192,6 +210,20 @@ class Resolver(
             return
         }
         resolveLocal(expr, expr.keyword)
+    }
+
+    private fun resolve(expr: Expr.Super) {
+        when (currentClassType) {
+            ClassType.SUBCLASS -> resolveLocal(expr, expr.keyword)
+            ClassType.NONE -> errorReporter.error(
+                expr.keyword,
+                "Can't use 'super' outside of a class."
+            )
+            else -> errorReporter.error(
+                expr.keyword,
+                "Can't use 'super' without a superclass."
+            )
+        }
     }
 
     private fun define(name: Token) {

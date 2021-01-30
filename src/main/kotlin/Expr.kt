@@ -9,5 +9,6 @@ sealed class Expr {
     class Unary(val op: Token, val expr: Expr) : Expr()
     class Variable(val name: Token) : Expr()
     class Set(val obj: Expr, val name: Token, val value: Expr) : Expr()
+    class Super(val keyword: Token, val method: Token) : Expr()
     class This(val keyword: Token) : Expr()
 }

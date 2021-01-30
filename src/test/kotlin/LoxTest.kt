@@ -354,9 +354,7 @@ internal class LoxTest {
         """.trimIndent()
         val (_, out) = interpret(source)
         assertEquals(
-            listOf(
-                "member"
-            ),
+            listOf("member"),
             out.printed
         )
     }
@@ -377,6 +375,105 @@ internal class LoxTest {
         assertEquals(1, errorReporter.errors.size)
         assertEquals(
             "Can't return a value from an initializer",
+            (errorReporter.errors[0] as TestErrorReporter.Error.Parser).message
+        )
+    }
+
+    @Test
+    fun `should fail to inherit from non-class`() {
+        val source = """
+            var NotAClass = "I am totally not a class";
+            
+            class Subclass < NotAClass {} 
+        """.trimIndent()
+        val (errorReporter, _) = interpret(source)
+        assertTrue(errorReporter.hadRuntimeError)
+        assertEquals(1, errorReporter.errors.size)
+        assertEquals(
+            "Superclass must be a class.",
+            (errorReporter.errors[0] as TestErrorReporter.Error.Interpreter).error.message
+        )
+    }
+
+    @Test
+    fun `should inherit methods from parent`() {
+        val source = """
+            class Doughnut {
+              cook() {
+                print "Fry until golden brown.";
+              }
+            }
+            
+            class BostonCream < Doughnut {}
+            
+            BostonCream().cook();
+        """.trimIndent()
+        val (_, out) = interpret(source)
+        assertEquals(
+            listOf("Fry until golden brown."),
+            out.printed
+        )
+    }
+
+    @Test
+    fun `should bind super to current class`() {
+        val source = """
+            class A {
+              method() {
+                print "Method A";
+              }
+            }
+            
+            class B < A {
+              method() {
+                print "Method B";
+              }
+            
+              test() {
+                super.method();
+              }
+            }
+            
+            class C < B {}
+            
+            C().test();
+        """.trimIndent()
+        val (_, out) = interpret(source)
+        assertEquals(
+            listOf("Method A"),
+            out.printed
+        )
+    }
+
+    @Test
+    fun `should fail to use super without superclass`() {
+        val source = """
+            class Eclair {
+              cook() {
+                super.cook();
+                print "Pipe full of crème pâtissière.";
+              }
+            }
+        """.trimIndent()
+        val (errorReporter, _) = interpret(source)
+        assertTrue(errorReporter.hadError)
+        assertEquals(1, errorReporter.errors.size)
+        assertEquals(
+            "Can't use 'super' without a superclass.",
+            (errorReporter.errors[0] as TestErrorReporter.Error.Parser).message
+        )
+    }
+
+    @Test
+    fun `should fail to use super outside class`() {
+        val source = """
+            super.cook();
+        """.trimIndent()
+        val (errorReporter, _) = interpret(source)
+        assertTrue(errorReporter.hadError)
+        assertEquals(1, errorReporter.errors.size)
+        assertEquals(
+            "Can't use 'super' outside of a class.",
             (errorReporter.errors[0] as TestErrorReporter.Error.Parser).message
         )
     }

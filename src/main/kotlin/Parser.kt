@@ -32,6 +32,12 @@ class Parser(
 
     private fun classDeclaration(): Stmt.Class {
         val name = consume(TokenType.IDENTIFIER, "Expect class name.")
+        val superClass = if (match(TokenType.LESS)) {
+            consume(TokenType.IDENTIFIER, "Expect superclass name.")
+            Expr.Variable(previous())
+        } else {
+            null
+        }
         consume(TokenType.LEFT_BRACE, "Expect '{' before class body")
 
         val methods = mutableListOf<Stmt.Function>()
@@ -40,7 +46,7 @@ class Parser(
         }
         consume(TokenType.RIGHT_BRACE, "Expect '}' after class body")
 
-        return Stmt.Class(name, methods)
+        return Stmt.Class(name, superClass, methods)
     }
 
     private fun function(kind: String): Stmt.Function {
@@ -330,6 +336,12 @@ class Parser(
                 val expr = expression()
                 consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
                 Expr.Grouping(expr)
+            }
+            match(TokenType.SUPER) -> {
+                val keyword = previous()
+                consume(TokenType.DOT, "Expect '.' after 'super'.")
+                val method = consume(TokenType.IDENTIFIER, "Expect superclass method name.")
+                Expr.Super(keyword, method)
             }
             match(TokenType.THIS) -> Expr.This(previous())
             else -> throw error(peek(), "Expect expression.")
