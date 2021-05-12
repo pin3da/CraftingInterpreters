@@ -4,6 +4,8 @@
 
 Kotlin implementation of https://craftinginterpreters.com
 
+The part 3 (building a compiler and a vm) can be found [here](https://github.com/pin3da/crafting-interpreters-vm)
+
 ## Compiling, testing and runing
 
 The project can be loaded with IntellIJ and run from the IDE. But it also has maven configured so you can run it without any IDE with the following commands.
